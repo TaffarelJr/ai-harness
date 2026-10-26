@@ -1,0 +1,26 @@
+{
+  "Links": [
+    { "Source": "claude/skills", "Target": "~/.claude/skills" },
+    { "Source": "claude/skills", "Target": "~/.copilot/skills" },
+    { "Source": "claude/skills", "Target": "~/.agents/skills" },
+    { "Source": "claude/agents", "Target": "~/.claude/agents" },
+    { "Source": "claude/hooks",  "Target": "~/.claude/hooks" }
+  ],
+  "Instructions": [
+    { "Source": "claude/CLAUDE.md", "Local": "local/CLAUDE.md",
+      "Targets": [ "~/.claude/CLAUDE.md", "~/.copilot/copilot-instructions.md" ] },
+    { "Source": "contexts/Personal.CLAUDE.md", "Local": "local/Personal.CLAUDE.md",
+      "Targets": [ "{personalRoot}/CLAUDE.md" ] },
+    { "Source": "contexts/Work.CLAUDE.md", "Local": "local/Work.CLAUDE.md",
+      "Targets": [ "{workRoot}/CLAUDE.md" ] }
+  ],
+  "Settings": [
+    { "Source": "claude/settings.json", "Local": "local/settings.json",
+      "Target": "~/.claude/settings.json", "Plugins": true }
+  ],
+  "PowerShellModules": [
+    { "Name": "BurntToast", "Platform": "windows" }
+  ],
+  "Plugins": "claude/plugins.json",
+  "Mcp": "claude/mcp.json"
+}

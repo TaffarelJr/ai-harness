@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__example-server__*"
+    ],
+    "additionalDirectories": [
+      "<a folder the agent may read outside any repository>",
+      "<another such folder>"
+    ]
+  }
+}
