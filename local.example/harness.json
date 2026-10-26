@@ -1,0 +1,4 @@
+{
+  "PersonalRoot": "<the folder that holds your personal repositories>",
+  "WorkRoot": "<the folder that holds your work repositories, if any>"
+}
