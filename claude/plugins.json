@@ -1,0 +1,10 @@
+{
+  "Marketplaces": [],
+  "Plugins": [
+    {
+      "Name": "skill-creator",
+      "Marketplace": "claude-plugins-official",
+      "Scope": "user"
+    }
+  ]
+}
