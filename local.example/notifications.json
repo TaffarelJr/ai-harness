@@ -1,0 +1,8 @@
+// This machine's notification choices: any subset of claude/notifications.json.
+// What is here wins; everything else comes from the defaults.
+{
+  "Sounds": {
+    "Done": { "File": "Windows Proximity Notification.wav" },
+    "Idle": { "Repeat": 3 }
+  }
+}

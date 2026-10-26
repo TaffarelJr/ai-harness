@@ -1,0 +1,71 @@
+// How Send-LocalNotification.ps1 signals you. Read on every notification,
+// so a change takes effect immediately; no restart. Put this machine's own
+// choices in local/notifications.json (same shape, any subset) — that file
+// is git-ignored and wins over this one. Comments are allowed in both.
+{
+  // Where the built-in sounds live, if you want to go listening again:
+  //   Windows  %SystemRoot%\Media (usually C:\Windows\Media) — open it in
+  //            Explorer, or Win+R → mmsys.cpl → Sounds tab → pick a file → Test
+  //   Linux    /usr/share/sounds/freedesktop/stereo
+  //   macOS    /System/Library/Sounds
+  //
+  // One entry per slot: "File" is a name resolved against that folder, a full
+  // path to any file the OS can play, or an object with a file per OS;
+  // "Repeat" is how many times it plays.
+  "Sounds": {
+    // Done: Claude finished a turn (Stop) and is waiting for you.
+    // Favorites: "Windows Notify Calendar.wav", "Windows Proximity Notification.wav".
+    // The other soft Windows sounds are used by common apps or are too quiet.
+    "Done": {
+      "File": {
+        "Windows": "Windows Notify Calendar.wav",
+        "Linux": "complete.oga",
+        "MacOS": "Glass.aiff"
+      },
+      "Repeat": 1
+    },
+    // Background: a background session finished. Same favorites as Done.
+    "Background": {
+      "File": {
+        "Windows": "Windows Notify Calendar.wav",
+        "Linux": "complete.oga",
+        "MacOS": "Glass.aiff"
+      },
+      "Repeat": 1
+    },
+    // Attention: Claude is blocked on you — a permission prompt, a question.
+    // The alarms read as alerts: "Alarm01.wav" … "Alarm10.wav" (Alarm05 is the
+    // calmest and most tuneful; Alarm10 the shortest).
+    "Attention": {
+      "File": {
+        "Windows": "Alarm05.wav",
+        "Linux": "message-new-instant.oga",
+        "MacOS": "Ping.aiff"
+      },
+      "Repeat": 2
+    },
+    // Idle: finished a minute ago and you have not replied — you stepped away.
+    // The rings read as a gentle "you could be running another prompt":
+    // "Ring01.wav" … "Ring10.wav" (Ring02/Ring06 short, Ring05/Ring08 long).
+    "Idle": {
+      "File": {
+        "Windows": "Ring05.wav",
+        "Linux": "bell.oga",
+        "MacOS": "Submarine.aiff"
+      },
+      "Repeat": 5
+    }
+  },
+  // The only ceiling is the hook's timeout in settings.json: a sequence that
+  // outlasts it is cut off there.
+  //
+  // A toast in the notification center as well, where the OS supports it
+  // (Windows needs the BurntToast module, which the installer adds).
+  "Toast": true,
+  // Silence everything (the log line is still written).
+  "Quiet": false
+}
+// Avoid for any slot: "tada.wav", "Windows Critical Stop.wav",
+// "Windows Error.wav", "Windows Exclamation.wav" — a fanfare or a fault.
+// Linux (freedesktop theme): "complete.oga", "message-new-instant.oga", "bell.oga".
+// macOS: "Glass.aiff", "Ping.aiff", "Submarine.aiff", "Hero.aiff".

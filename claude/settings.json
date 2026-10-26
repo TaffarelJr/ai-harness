@@ -1,0 +1,75 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read",
+      "Skill",
+      "WebFetch",
+      "WebSearch",
+      "Bash",
+      "PowerShell"
+    ],
+    "ask": [
+      "Bash(dd *)",
+      "Bash(mkfs*)",
+      "Bash(npm unpublish*)",
+      "Bash(reg delete*)",
+      "PowerShell(Clear-RecycleBin*)",
+      "PowerShell(Format-Volume*)",
+      "PowerShell(Invoke-RestMethod * -Method Delete*)",
+      "PowerShell(Invoke-WebRequest * -Method Delete*)",
+      "PowerShell(npm unpublish*)",
+      "PowerShell(reg delete*)",
+      "PowerShell(Remove-ItemProperty *)"
+    ],
+    "deny": [
+      "Bash(gh pr merge*)",
+      "PowerShell(gh pr merge*)"
+    ]
+  },
+  "model": "opusplan",
+  "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-opus-5": { "effortLevel": "xhigh" },
+    "claude-sonnet-5": { "effortLevel": "xhigh" },
+    "claude-sonnet-5-5": { "effortLevel": "xhigh" }
+  },
+  "autoUpdatesChannel": "latest",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"{{hooks}}/Block-DangerousGit.ps1\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"{{hooks}}/Send-LocalNotification.ps1\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt|idle_prompt|agent_needs_input|agent_completed|elicitation_dialog",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"{{hooks}}/Send-LocalNotification.ps1\"",
+            "timeout": 90
+          }
+        ]
+      }
+    ]
+  }
+}
