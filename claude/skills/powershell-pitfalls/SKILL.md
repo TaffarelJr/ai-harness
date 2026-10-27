@@ -112,6 +112,15 @@ Each entry says what goes wrong and what to do. Formatting rules are in
 - **A command operand that starts with `-`** is an option. Validate with
   `'^(?!-)'`, and pass it after `--` only where the subcommand reads it as a
   plain operand: `git log -- main` makes `main` a path.
+- **`$null` passed to a .NET `[string]` parameter arrives as `''`**:
+  `[Queue[string]]::new().Enqueue($null)` stores an empty string, and a method
+  that treats null and empty differently never sees the null. Pass
+  `[NullString]::Value` where a real null is meant.
+- **`Position` belongs to each `[Parameter()]` attribute**, not to the
+  parameter. A parameter in two sets with `Position = 0` on one attribute is
+  named-only in the other set, so a positional call that resolves to that set
+  fails with "A positional parameter cannot be found". Repeat `Position` on
+  every attribute that should accept it.
 
 ## Errors and preferences
 
