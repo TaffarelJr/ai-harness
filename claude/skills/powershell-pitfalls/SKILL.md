@@ -46,6 +46,12 @@ Each entry says what goes wrong and what to do. Formatting rules are in
   `[string]::Equals($a, $b, 'Ordinal')`, when case counts. The key lookups of
   `@{}` and `[ordered]@{}` ignore case too; `[hashtable]::new()` and
   `Dictionary[string, object]` do not.
+- **String comparison also skips ignorable code points.** `-eq`, `-ceq`,
+  `switch` and `Compare-Object` compare by culture rules, under which a byte
+  order mark (U+FEFF) or a soft hyphen counts for nothing: `'x' -ceq "`u{FEFF}x"`
+  is true, so a test cannot tell a value with a stray BOM from one without.
+  Compare with `[string]::Equals($a, $b, 'Ordinal')`, which an array's
+  `.Contains()` already uses, and build a test harness's equality on it.
 - **`ConvertFrom-Json` fails on keys that differ only in case** ("contains
   keys with different casing"), because it builds a case-insensitive object;
   `~/.claude.json` holds both `c:/x` and `C:/x` project paths. Pass
