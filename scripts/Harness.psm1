@@ -2689,13 +2689,17 @@ function Get-HarnessPluginSetting {
 function Read-HarnessMcpManifest {
     <#
     .SYNOPSIS
-        Returns the servers listed in claude/mcp.json.
+        Returns the servers listed in claude/mcp.json or local/mcp.json.
     .DESCRIPTION
         Each server's configuration comes back as compact JSON, ready for
-        "claude mcp add-json". Never print it: it may name environment
-        variables that hold secrets.
+        "claude mcp add-json", with every value as written: a ${VAR}
+        reference is kept for Claude Code to expand. Never print it: it may
+        name environment variables that hold secrets.
     .PARAMETER Path
         The full path of the MCP manifest.
+    .PARAMETER HideDetail
+        Leaves the parser's own message out of a failure. Use it for
+        local/mcp.json.
     .INPUTS
         None.
     .OUTPUTS
@@ -2712,13 +2716,15 @@ function Read-HarnessMcpManifest {
     [OutputType([PSCustomObject])]
     param(
         [Parameter(Mandatory)]
-        [string]$Path
+        [string]$Path,
+
+        [switch]$HideDetail
     )
 
     try {
         $ErrorActionPreference = 'Stop'
 
-        $data = Read-HarnessJson -Path $Path
+        $data = Read-HarnessJson -Path $Path -HideDetail:$HideDetail
         Assert-HarnessObject -Value $data -Where $Path
         if (-not $data.Contains('mcpServers')) {
             return

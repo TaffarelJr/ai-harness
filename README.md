@@ -158,6 +158,8 @@ or dropped by the reinstall.
 
 `claude/plugins.json` lists the marketplaces and plugins installed at
 user scope; `claude/mcp.json` lists MCP servers registered at user scope.
+A server that exists on one machine only goes in `local/mcp.json`,
+in the same shape; it is added to the shared list, and wins on a name clash.
 The installer adds what is missing and the updater brings it current,
 so a new machine needs no remembered install commands.
 The settings keys that record which plugins are enabled are generated

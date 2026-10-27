@@ -32,7 +32,7 @@
 .PARAMETER SkipPlugins
     Leaves out the marketplaces and plugins in claude/plugins.json.
 .PARAMETER SkipMcp
-    Leaves out the MCP servers in claude/mcp.json.
+    Leaves out the MCP servers in claude/mcp.json and local/mcp.json.
 .PARAMETER NonInteractive
     Never prompts. An unknown personal root is then skipped with a warning.
 .PARAMETER WhatIf
@@ -798,15 +798,17 @@ Invoke-InstallStep -Activity 'Reading the MCP manifest' -Step {
         return 'skipped'
     }
 
-    if (-not $manifest.Mcp) {
-        Write-Warning 'harness.json names no MCP manifest.'
-        $summary.Skipped++
-        return 'skipped'
-    }
+    $path = if ($manifest.Mcp) { Resolve-HarnessPath -Path $manifest.Mcp @resolve }
+    $localMcp = Join-Path $localFull 'mcp.json'
+    $hasShared = $path -and [IO.File]::Exists($path)
+    $hasLocal = [IO.File]::Exists($localMcp)
+    if (-not $hasShared -and -not $hasLocal) {
+        $named = 'harness.json names no MCP manifest'
+        if ($manifest.Mcp) {
+            $named = "$($manifest.Mcp) does not exist yet"
+        }
 
-    $path = Resolve-HarnessPath -Path $manifest.Mcp @resolve
-    if (-not [IO.File]::Exists($path)) {
-        Write-Warning "$($manifest.Mcp) does not exist yet, so no MCP servers are registered."
+        Write-Warning "$named and there is no local/mcp.json, so no MCP servers are registered."
         $summary.Skipped++
         return 'skipped'
     }
@@ -817,8 +819,24 @@ Invoke-InstallStep -Activity 'Reading the MCP manifest' -Step {
         return 'skipped'
     }
 
-    $script:mcpServers = @(Read-HarnessMcpManifest -Path $path)
-    return "$($mcpServers.Count) servers"
+    # One list keyed by name: a local server replaces a shared one of the same name, in its place.
+    $servers = [System.Collections.Specialized.OrderedDictionary]::new([StringComparer]::Ordinal)
+    if ($hasShared) {
+        foreach ($server in Read-HarnessMcpManifest -Path $path) {
+            $servers[$server.Name] = $server
+        }
+    }
+
+    $fromLocal = 0
+    if ($hasLocal) {
+        foreach ($server in Read-HarnessMcpManifest -Path $localMcp -HideDetail) {
+            $servers[$server.Name] = $server
+            $fromLocal++
+        }
+    }
+
+    $script:mcpServers = @($servers.PSBase.Values)
+    return "$($mcpServers.Count) servers ($fromLocal from local)"
 }
 
 if ($mcpServers.Count -gt 0) {

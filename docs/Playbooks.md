@@ -57,7 +57,7 @@ before committing; it parses every manifest and script.
 | Machine-only instruction | `local/CLAUDE.md` (git-ignored) | `Install-Harness` |
 | Folder context (a group of repositories) | `contexts/<Name>.CLAUDE.md` for what is true of the group, an `Instructions` entry in `harness.json` with a root token, and a `local/<Name>.CLAUDE.md` fragment for the names only that machine knows | `Install-Harness` |
 | Hook | A script in `claude/hooks/` and an entry in `claude/settings.json` whose command uses the `{{hooks}}` token | `Install-Harness`, then a new session |
-| MCP server for you | A block under `mcpServers` in `claude/mcp.json`, in the same shape as a project's `.mcp.json`; any secret is an environment-variable reference, and the value is set on the machine, never in a file | `Install-Harness` registers it at user scope |
+| MCP server for you | A block under `mcpServers` in `claude/mcp.json`, in the same shape as a project's `.mcp.json`, or in `local/mcp.json` (git-ignored) for a server only this machine has; any secret is an environment-variable reference, and the value is set on the machine, never in a file | `Install-Harness` registers it at user scope |
 | PowerShell module a hook needs | An entry under `PowerShellModules` in `harness.json` | `Install-Harness` |
 
 Commit on a branch, open a pull request, and if the change is several
