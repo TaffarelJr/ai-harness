@@ -214,14 +214,22 @@ function Get-DenyReason {
         }
     }
 
-    # git branch that force-deletes or force-renames main or master.
-    if (-not $Override -and [regex]::IsMatch($Text, '\bbranch\b') -and
-        (Test-Any -Text $Text -Pattern @('\b(?:refs/heads/)?(?:main|master)\b'))) {
-        $branchDestructive = Test-Any -Text $Text -Pattern @('(?:^|\s)-[A-Za-z]*[DM][A-Za-z]*\b')
-        $branchForceCombo = (Test-Any -Text $Text -Pattern @('--delete', '(?:^|\s)-[a-z]*d[a-z]*\b')) -and
-            (Test-Any -Text $Text -Pattern @('--force', '(?:^|\s)-[a-z]*f[a-z]*\b'))
-        if ($branchDestructive -or $branchForceCombo) {
-            return 'force-deleting or force-renaming the default branch (main or master) is not allowed'
+    # git branch that force-deletes or force-renames main or master. Judged
+    # within one command segment: a PowerShell -Depth or -Module elsewhere in
+    # a script, plus the words in a string, must not count.
+    if (-not $Override) {
+        foreach ($segment in [regex]::Split($Text, '&&|\|\||[;&|\r\n(){}]')) {
+            if (-not [regex]::IsMatch($segment, '\bbranch\b') -or
+                -not (Test-Any -Text $segment -Pattern @('\b(?:refs/heads/)?(?:main|master)\b'))) {
+                continue
+            }
+
+            $branchDestructive = Test-Any -Text $segment -Pattern @('(?:^|\s)-[A-Za-z]*[DM][A-Za-z]*\b')
+            $branchForceCombo = (Test-Any -Text $segment -Pattern @('--delete', '(?:^|\s)-[a-z]*d[a-z]*\b')) -and
+                (Test-Any -Text $segment -Pattern @('--force', '(?:^|\s)-[a-z]*f[a-z]*\b'))
+            if ($branchDestructive -or $branchForceCombo) {
+                return 'force-deleting or force-renaming the default branch (main or master) is not allowed'
+            }
         }
     }
 
