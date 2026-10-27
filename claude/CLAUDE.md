@@ -59,11 +59,16 @@ are more specific than anything here.
 - Arrange / Act / Assert, one case per test.
 - Coverage is a deliverable, not an afterthought.
 - Tests are held to the same standard as production code.
+- Design code around seams so most paths are unit-testable with fakes.
+- Integration tests are few, prove real connectivity,
+  and are kept separate so the unit suite stays fast.
 
 ## Git and GitHub
 
 - Work on a branch; open a **draft** pull request; only a person merges.
-- Never force-push a shared branch. Never merge a pull request yourself.
+- Never rewrite or force-push the default branch, or a branch someone else
+  builds on. My own branch under an open pull request is rewritten freely.
+  Never merge a pull request yourself.
 - Conventional Commits; one concern per commit.
 - Keep the tracking issue current as work progresses —
   tick items, add summaries — without being asked.
