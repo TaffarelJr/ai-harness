@@ -53,6 +53,13 @@ Each entry says what goes wrong and what to do. Formatting rules are in
 - **A `string[]` interpolated into a string** joins on `$OFS` (one space), so a
   captured multi-line output collapses to one line. Join with
   `-join [Environment]::NewLine` first.
+- **Inner arrays flatten.** An array subexpression unrolls what each statement
+  in it emits, so `@( @('a', 'b') @('c', 'd') )` on separate lines is four
+  strings, and a loop meant to see pairs sees strings: `$pair[0]` is a first
+  character, and a `Replace($pair[0], $pair[1])` written for pairs rewrites
+  single characters. A table of pairs is one of hashtables
+  (`@{ Old = 'a'; New = 'b' }`), or the inner arrays are separated by commas
+  on one line; check `$pair.Count` before trusting the shape.
 - **A function that emits zero or one item** gives `$null` or the bare item
   when assigned: `$one[0]` on a single string is its first character. Wrap the
   call, `@(Get-Foo)`. `return $null` emits a real `$null` item, so
