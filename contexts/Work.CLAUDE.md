@@ -11,6 +11,8 @@ personal defaults.
 - Code, pull requests, and CI/CD live on GitHub Enterprise. Use the
   GitHub MCP server named below when it answers; when it does not,
   fall back to `gh` with the work account named below.
+- A pull request always references the work item it serves as `AB#<id>`,
+  so the two systems link.
 - Only a person merges a pull request.
 - Nothing from these repositories — code, data, or conversation —
   leaves the machine except to the AI providers the employer has

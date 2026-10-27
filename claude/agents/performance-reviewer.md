@@ -1,5 +1,5 @@
 ---
-name: perf-reviewer
+name: performance-reviewer
 description: >-
   Reviews changed code for performance defects only: algorithmic cost,
   avoidable allocations, N+1 queries, blocking calls on async paths, and

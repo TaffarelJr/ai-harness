@@ -5,6 +5,11 @@
       "Name": "skill-creator",
       "Marketplace": "claude-plugins-official",
       "Scope": "user"
+    },
+    {
+      "Name": "csharp-lsp",
+      "Marketplace": "claude-plugins-official",
+      "Scope": "user"
     }
   ]
 }
