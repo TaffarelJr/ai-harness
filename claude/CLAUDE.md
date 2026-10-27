@@ -38,8 +38,11 @@ are more specific than anything here.
 
 ## Code
 
-- Width: 80 characters is the target, 120 the hard limit.
+- Width, in every file I write: 80 characters is the target,
+  100 is fine when the alternative is a short tail or an awkward break,
+  120 the hard limit.
   Do not over-wrap — a line that fits on one line stays on one line.
+  A line that cannot break (a table row, a URL, a long literal) is exempt.
 - Prose wraps at punctuation or a phrase boundary first,
   then fills toward the target. Never mid-phrase.
 - No comments by default. The only comment worth writing is a
