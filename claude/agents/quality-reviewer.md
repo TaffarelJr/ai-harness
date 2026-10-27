@@ -54,9 +54,10 @@ context; judge the change.
 - **Consistency with the neighbors** outranks every other rule here.
   A change that invents a second way to do something already done nearby is a
   finding, even if the new way is nicer.
-- **Line width and wrapping** as `AGENTS.md` states them: a break lands at
-  a phrase boundary, never mid-thought, and a single word alone on the next
-  line should have been pulled up.
+- **Line width and wrapping** as the repository states them, or as the
+  user-level instructions do where the repository states none: a break lands
+  at a phrase boundary, never mid-thought, and a single word alone on the
+  next line should have been pulled up.
 - **Naming**: descriptive, no obscure abbreviations, following the language's
   convention and its instruction file.
 - **Comments** explain *why*. One explaining *what* means the code should be
