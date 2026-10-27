@@ -7,12 +7,13 @@
     Without -Installed it checks the repository alone: harness.json,
     local/harness.json and claude/plugins.json have every required field and
     no key they do not know (keys are case-sensitive), harness.json names
-    sources that exist, every JSON file under claude/, contexts/, local/ and
-    local.example/ parses, every script parses, and PSScriptAnalyzer (when
-    installed) has nothing to say. With -Installed it also checks a home
-    directory: every link points into the checkout, every generated
-    instruction file carries its header, and every generated settings file
-    still matches its sidecar. A {workRoot} target is checked only when a
+    sources that exist, local/mcp.json (when present) has an mcpServers
+    object at its top level, every JSON file under claude/, contexts/,
+    local/ and local.example/ parses, every script parses, and
+    PSScriptAnalyzer (when installed) has nothing to say. With -Installed it
+    also checks a home directory: every link points into the checkout, every
+    generated instruction file carries its header, and every generated
+    settings file still matches its sidecar. A {workRoot} target is checked only when a
     work root is known; otherwise it is a note. A source that does not exist
     yet, an analyzer finding and settings drift are warnings; anything else
     wrong is a failure, and the script exits 1.
@@ -176,6 +177,26 @@ if ($null -ne $manifest -and $manifest.Plugins) {
             $null = Read-HarnessPluginManifest -Path $path
             Add-Result @row -Result pass -Detail $checked
         }
+    }
+    catch {
+        Add-Result @row -Result fail -Detail $_.Exception.Message
+    }
+}
+
+$localMcp = Join-Path $localFull 'mcp.json'
+if ([IO.File]::Exists($localMcp)) {
+    $row = @{
+        Check   = 'manifest'
+        Subject = 'local/mcp.json'
+    }
+    try {
+        # Only the top level is ours; each server block is Claude Code's schema.
+        $data = Read-HarnessJson -Path $localMcp -HideDetail
+        if (-not $data.Contains('mcpServers') -or $data['mcpServers'] -isnot [System.Collections.IDictionary]) {
+            throw 'its top level must be { "mcpServers": { ... } }'
+        }
+
+        Add-Result @row -Result pass -Detail "$($data['mcpServers'].PSBase.Count) servers under mcpServers"
     }
     catch {
         Add-Result @row -Result fail -Detail $_.Exception.Message

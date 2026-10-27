@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "<server-name>": {
+      "type": "http",
+      "url": "https://<host>/mcp",
+      "headers": {
+        "Authorization": "${EXAMPLE_MCP_TOKEN}"
+      }
+    }
+  }
+}
