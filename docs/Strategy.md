@@ -186,7 +186,7 @@ machine is allowed to talk, not about the harness.
   [Project Layer][projectLayerDoc].
 - How this repository is installed and kept current: the [README][readme].
 
-<!-- Source Code URIs (folders first, then files; each alphabetical) -->
+<!-- Repository files -->
 
 [autonomyDoc]: ./Autonomy.md
 [playbooksDoc]: ./Playbooks.md

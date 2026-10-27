@@ -204,7 +204,7 @@ There is no inventory to maintain; ask the sources of truth:
 - `~/.claude/notifications.log` — what the notification hook has fired
   for, when, and in which folder.
 
-<!-- Source Code URIs (folders first, then files; each alphabetical) -->
+<!-- Repository files -->
 
 [projectLayerDoc]: ./ProjectLayer.md
 [sourcesDoc]: ./Sources.md

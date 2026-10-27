@@ -165,17 +165,17 @@ the source's to take back.
 The round's issue records the retirement and the reason,
 so the next round does not re-adopt it.
 
-<!-- Source Code URIs (folders first, then files; each alphabetical) -->
+<!-- Repository files -->
 
-[projectLayerDoc]: ./ProjectLayer.md
 [pluginsManifest]: ../claude/plugins.json
+[projectLayerDoc]: ./ProjectLayer.md
 
-<!-- GitHub URIs (alphabetical) -->
+<!-- Other repositories -->
 
 [awesomeCopilot]: https://github.com/github/awesome-copilot
 [claudePluginsOfficial]: https://github.com/anthropics/claude-plugins-official
 
-<!-- Public URIs (alphabetical) -->
+<!-- Public websites -->
 
 [agentSkills]: https://agentskills.io/specification
 [claudeLegal]: https://code.claude.com/docs/en/legal-and-compliance

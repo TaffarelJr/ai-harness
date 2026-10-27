@@ -195,19 +195,17 @@ one, so template merges stay clean.
   Review on github.com comes from Copilot code review and the other
   reviewers described in [Autonomy][autonomyDoc] instead.
 
-<!-- Source Code URIs (folders first, then files; each alphabetical) -->
+<!-- Repository files -->
 
 [autonomyDoc]: ./Autonomy.md
 [sourcesDoc]: ./Sources.md
 [strategyDoc]: ./Strategy.md
 
-<!-- GitHub URIs (alphabetical) -->
+<!-- Other repositories -->
 
 [claudeAgentsSkillsIssue]: https://github.com/anthropics/claude-code/issues/31005
-[copilotHooks]: https://docs.github.com/en/copilot/reference/hooks-configuration
-[copilotSupport]: https://docs.github.com/en/copilot/reference/custom-instructions-support
 
-<!-- Public URIs (alphabetical) -->
+<!-- Public websites -->
 
 [agentSkills]: https://agentskills.io/specification
 [agents]: https://agents.md
@@ -217,4 +215,6 @@ one, so template merges stay clean.
 [claudePluginLoading]: https://code.claude.com/docs/en/plugins/loading
 [claudeSettings]: https://code.claude.com/docs/en/settings
 [claudeSkills]: https://code.claude.com/docs/en/skills
+[copilotHooks]: https://docs.github.com/en/copilot/reference/hooks-configuration
 [copilotSkills]: https://code.visualstudio.com/docs/agent-customization/agent-skills
+[copilotSupport]: https://docs.github.com/en/copilot/reference/custom-instructions-support
