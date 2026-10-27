@@ -279,11 +279,11 @@ function Get-DenyReason {
         return "launching git through Start-Process hides its arguments; $openUp"
     }
 
-    # pwsh/powershell -EncodedCommand (and its -e/-enc short forms) hides the script in base64.
-    if (Test-Any -Text $Text -Pattern @('(?i)\b(?:pwsh|powershell)\b')) {
-        if (Test-Any -Text $Text -Pattern @('(?i)-e(nc(odedcommand)?)?\b')) {
-            return "an encoded PowerShell command hides what runs; pass the script as plain text instead"
-        }
+    # pwsh/powershell -EncodedCommand (and its -e/-ec/-enc short forms) hides the script in base64.
+    # The flag must follow the shell name in the same segment: a bare `set -e` elsewhere is not it.
+    $encodedShell = '(?i)\b(?:pwsh|powershell)(?:\.exe)?\b[^;&|\r\n]*\s-e(?:c|nc|ncodedcommand)?\b'
+    if (Test-Any -Text $Text -Pattern @($encodedShell)) {
+        return "an encoded PowerShell command hides what runs; pass the script as plain text instead"
     }
 
     # A long base64-looking blob next to a git or gh command, e.g. a smuggled script.
