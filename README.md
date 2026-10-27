@@ -183,11 +183,11 @@ and every script and manifest parses.
 Without `-Installed` it checks only the repository itself,
 which is what a change should pass before it is committed.
 
-<!-- Source Code URIs (folders first, then files; each alphabetical) -->
+<!-- Repository files -->
 
 [playbooksDoc]: ./docs/Playbooks.md
 [strategyDoc]: ./docs/Strategy.md
 
-<!-- Public URIs (alphabetical) -->
+<!-- Public websites -->
 
 [agentSkills]: https://agentskills.io/specification

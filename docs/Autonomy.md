@@ -234,16 +234,19 @@ and therefore its own logins,
 so the identity that runs personal work and the identity that runs work
 never share a configuration file.
 
-<!-- GitHub URIs (alphabetical) -->
+<!-- Other repositories -->
 
 [claudeGitHubActions]: https://github.com/anthropics/claude-code-action
+
+<!-- GitHub documentation -->
+
 [copilotAutoReview]: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/configure-automatic-review
 [copilotCli]: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference
 [copilotCloudAgent]: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/use-cloud-agent-on-github
 [copilotCodeReview]: https://docs.github.com/en/copilot/concepts/agents/code-review
 [githubNotifications]: https://docs.github.com/en/subscriptions-and-notifications/get-started/configuring-notifications
 
-<!-- Public URIs (alphabetical) -->
+<!-- Public websites -->
 
 [claudeAgentView]: https://code.claude.com/docs/en/agent-view
 [claudeChannels]: https://code.claude.com/docs/en/channels
