@@ -6,7 +6,7 @@ description: >-
   end unnoticed, a real tool or dialog opening, or a command the guard hook
   asks about. Use before running any command, script or test run, after
   writing a file with the Write tool, and when a command did nothing, was
-  denied or behaved unexpectedly.
+  refused or behaved unexpectedly.
 when_to_use: >-
   Trigger phrases: run in the background, command timed out, hung, pwsh -File,
   Start-Process, set an environment variable, output too long, line endings,
@@ -47,9 +47,11 @@ Do not call `python3` in Git Bash: it can be a Store stub that does nothing.
   split inside.
 - `exit` ends only the script it is in. Read `$LASTEXITCODE` after `pwsh -File`;
   a script that returns without `exit` leaves a stale value under `&`.
-- The tool may refuse a recursive `Remove-Item` on a variable path inside an
-  inline here-string. Write cleanup as a script file and read it before
-  running it.
+- Claude Code itself refuses some `Remove-Item` calls with "Remove-Item on
+  system path '…' is blocked. This path is protected from removal." It
+  misreads a variable or quoted path, often as `/`, `*` or `C:\Program`, and
+  no setting changes it. This is not the guard hook. Write the cleanup as a
+  script file, read it, and run it with `pwsh -NoProfile -File`.
 
 ## The command guard
 
