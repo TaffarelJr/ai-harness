@@ -27,16 +27,16 @@
       "PowerShell(gh pr merge*)"
     ]
   },
-  "model": "opusplan",
   "advisorModel": "opus",
+  "autoUpdatesChannel": "latest",
   "effortLevel": "xhigh",
+  "model": "opusplan",
   "modelSettings": {
     "claude-opus-5": { "effortLevel": "xhigh" },
     "claude-opus-5-5": { "effortLevel": "xhigh" },
     "claude-sonnet-5": { "effortLevel": "xhigh" },
     "claude-sonnet-5-5": { "effortLevel": "xhigh" }
   },
-  "autoUpdatesChannel": "latest",
   "hooks": {
     "PreToolUse": [
       {
