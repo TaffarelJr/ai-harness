@@ -42,7 +42,7 @@
         "Linux": "message-new-instant.oga",
         "MacOS": "Ping.aiff"
       },
-      "Repeat": 2
+      "Repeat": 1
     },
     // Idle: finished a minute ago and you have not replied — you stepped away.
     // The rings read as a gentle "you could be running another prompt":
