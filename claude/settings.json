@@ -28,6 +28,7 @@
     ]
   },
   "model": "opusplan",
+  "advisorModel": "opus",
   "effortLevel": "xhigh",
   "modelSettings": {
     "claude-opus-5": { "effortLevel": "xhigh" },
