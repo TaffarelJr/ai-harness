@@ -96,6 +96,7 @@ and writes the answers there, so nothing is placed by hand.
 📁 local/             this machine only — where the folders are, which accounts, what is blocked; git-ignored
 📁 local.example/     the shape of each local file
 📁 scripts/           install, update, and test
+📁 tests/             tests for the hooks
 📄 harness.json       the manifest: what is linked where, what is generated from what
 ```
 
@@ -182,6 +183,13 @@ every generated file is the one the installer wrote,
 and every script and manifest parses.
 Without `-Installed` it checks only the repository itself,
 which is what a change should pass before it is committed.
+
+A change to the command guard also runs its tests,
+which feed the hook a table of commands and check what it decides:
+
+```powershell
+./tests/Block-DangerousGit.Tests.ps1
+```
 
 <!-- Repository files -->
 
