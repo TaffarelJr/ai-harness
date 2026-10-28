@@ -2,33 +2,33 @@
 
 <#
 .SYNOPSIS
-    Denies a shell command that force-pushes, deletes a branch or remote ref,
-    merges a pull request, or hides any of those behind an alias or an encoder.
+    Asks before a shell command that force-pushes or deletes the default
+    branch, merges a pull request, or hides what it runs.
 .DESCRIPTION
     A Claude Code PreToolUse hook for the Bash and PowerShell tools. It reads
-    the hook input from standard input and scans tool_input.command as raw
-    text: it does not parse shell structure, because a tokenizer loses to
-    quoting, continuations, substitution, brace expansion and nested shells.
-    After joining line continuations it matches the dangerous shapes with
-    regular expressions and deliberately over-blocks; the deny reason tells
-    the agent to run the command itself so a person can see it. A force-push
-    or a branch delete is allowed to a named feature branch and denied for
-    the default branch (main or master) or when no branch is named. Setting
-    the environment variable AI_HARNESS_ALLOW_HISTORY_REWRITE to 1 or true in
-    the hook's own environment allows force-pushes and branch deletions to any
-    branch for that session (merging a pull request stays denied). A command
-    it refuses is denied as JSON on standard output. Anything else is left to
-    the normal permission flow. It never reaches the network, and it fails
-    closed: an unexpected error blocks the call (exit 2).
+    the hook input from standard input and scans tool_input.command as text.
+    It never blocks a command: one it flags gets an "ask" decision, so the
+    permission prompt shows the reason and a person approves or declines it.
+    Anything else is left to the normal permission flow.
+
+    Each rule is judged within one command segment, the text between `;`,
+    `&&`, `||`, `|`, `&` and line breaks, so a word in a string or in a
+    neighboring command does not count. A force-push or a branch delete to a
+    named feature branch passes; one aimed at the default branch (main or
+    master), or at no named branch, asks. Setting the environment variable
+    AI_HARNESS_ALLOW_HISTORY_REWRITE to 1 or true in the hook's own
+    environment lets those pass for any branch for that session; merging a
+    pull request still asks. It never reaches the network. A command it
+    cannot check asks too, and the prompt says why.
 .INPUTS
     System.String. The hook input JSON, on standard input.
 .OUTPUTS
-    None, or the deny decision as JSON on standard output.
+    None, or the ask decision as JSON on standard output.
 .EXAMPLE
     $hookInput = '{"tool_name":"Bash","tool_input":{"command":"git push -f"}}'
     $hookInput | pwsh -NoProfile -File ./Block-DangerousGit.ps1
 
-    Prints a deny decision for the force-push.
+    Prints an ask decision, because the force-push names no branch.
 .LINK
     https://github.com/TaffarelJr/ai-harness/blob/main/README.md
 #>
@@ -83,55 +83,48 @@ function Get-DestinationBranch {
 function Get-PushDestination {
     <#
     .SYNOPSIS
-        Returns the branches a push names, and whether any is the default.
+        Returns the branches a push segment names, and whether any is the default.
     .DESCRIPTION
-        Splits the text into rough shell segments, finds each push or
-        send-pack, and reads the destination of each refspec: the part after a
-        colon, else the refspec itself, with a leading + and a refs/heads/
-        prefix stripped. The first bare operand is the remote; the rest are
-        refspecs. A bare HEAD or an empty destination counts as unnamed.
+        Reads the destination of each refspec after push or send-pack: the
+        part after a colon, else the refspec itself, with a leading + and a
+        refs/heads/ prefix stripped. The first bare operand is the remote; the
+        rest are refspecs. A bare HEAD or an empty destination counts as
+        unnamed. A variable counts as named, because its value is unknown here.
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
     param(
         [Parameter(Mandatory)]
-        [AllowEmptyString()]
-        [string]$Text
+        [AllowEmptyCollection()]
+        [string[]]$Token
     )
 
-    $raw = [System.Collections.Generic.List[string]]::new()
-    foreach ($segment in [regex]::Split($Text, '&&|\|\||[;&|\r\n(){}]')) {
-        $tokens = @($segment -split '\s+' | Where-Object { $_ -ne '' })
-        $verb = -1
-        for ($i = 0; $i -lt $tokens.Count; $i++) {
-            if ($tokens[$i] -ceq 'push' -or $tokens[$i] -ceq 'send-pack') {
-                $verb = $i
-                break
-            }
+    $verb = -1
+    for ($i = 0; $i -lt $Token.Count; $i++) {
+        if ($Token[$i] -ceq 'push' -or $Token[$i] -ceq 'send-pack') {
+            $verb = $i
+            break
         }
+    }
 
-        if ($verb -lt 0) {
+    $raw = [System.Collections.Generic.List[string]]::new()
+    $bare = [System.Collections.Generic.List[string]]::new()
+    for ($i = $verb + 1; $verb -ge 0 -and $i -lt $Token.Count; $i++) {
+        $one = $Token[$i]
+        if ($one.StartsWith('-')) {
             continue
         }
 
-        $bare = [System.Collections.Generic.List[string]]::new()
-        for ($i = $verb + 1; $i -lt $tokens.Count; $i++) {
-            $token = $tokens[$i]
-            if ($token.StartsWith('-')) {
-                continue
-            }
-
-            if ($token.StartsWith('+') -or $token.Contains(':')) {
-                $raw.Add((Get-DestinationBranch -Refspec $token))
-            }
-            else {
-                $bare.Add($token)
-            }
+        if ($one.StartsWith('+') -or $one.Contains(':')) {
+            $raw.Add((Get-DestinationBranch -Refspec $one))
         }
-
-        for ($i = 1; $i -lt $bare.Count; $i++) {
-            $raw.Add((Get-DestinationBranch -Refspec $bare[$i]))
+        else {
+            $bare.Add($one)
         }
+    }
+
+    for ($i = 1; $i -lt $bare.Count; $i++) {
+        $raw.Add((Get-DestinationBranch -Refspec $bare[$i]))
     }
 
     $named = [System.Collections.Generic.List[string]]::new()
@@ -147,27 +140,149 @@ function Get-PushDestination {
         }
     }
 
-    return [PSCustomObject]@{ Named = $named; HasDefault = $hasDefault }
+    return [PSCustomObject]@{
+        Named      = $named
+        HasDefault = $hasDefault
+    }
 }
 
-function Get-DenyReason {
+function Get-SegmentReason {
     <#
     .SYNOPSIS
-        Returns the reason to deny a command, or nothing to allow it.
+        Returns why one command segment needs a person's approval, or nothing.
     .DESCRIPTION
-        Every test is an independent regex over the whole text, so the work
-        is linear in the command's length. The tool names git and gh are
-        matched without case; git subcommands are matched with case, as git
-        requires them. A force-push or a branch delete is allowed to a named
-        feature branch and denied for the default branch (main or master) or
-        when no branch is named; with -Override both are allowed anyway.
+        The tool names git and gh are matched without case; git subcommands
+        are matched with case, as git requires them.
+    .PARAMETER Segment
+        One command segment, with line continuations already joined.
+    .PARAMETER Override
+        Lets force-pushes and branch deletions to any branch pass.
+    .OUTPUTS
+        System.String. The reason, phrased to follow "this command", or
+        nothing.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string]$Segment,
+
+        [switch]$Override
+    )
+
+    $token = @($Segment -split '\s+' | ForEach-Object { $_.Trim('"', "'", '(', ')') } | Where-Object { $_ -ne '' })
+    $git = [regex]::IsMatch($Segment, '(?i)\bgit(?:\.exe)?\b')
+    $gh = [regex]::IsMatch($Segment, '(?i)\bgh(?:\.exe)?\b')
+
+    if ($git -and -not $Override -and ($token -ccontains 'push' -or $token -ccontains 'send-pack')) {
+        $force = Test-Any -Text $Segment -Pattern @(
+            '--force',                      # --force, --force-with-lease[=val], --force-if-includes
+            '(?:^|\s)-[a-z]*f[a-z]*\b',     # a short-flag cluster carrying f
+            '(?:^|\s)\+[\w./:-]+'           # a +refspec force
+        )
+        $delete = Test-Any -Text $Segment -Pattern @(
+            '--del[a-z]*',                  # --delete and every abbreviation down to --del
+            '(?:^|\s)-[a-z]*d[a-z]*\b',     # a short-flag cluster carrying d
+            '(?:^|\s):[\w./-]+'             # a :branch delete refspec
+        )
+        $bulk = (Test-Any -Text $Segment -Pattern @('--mirror', '--prune\w*')) -or
+            ($force -and [regex]::IsMatch($Segment, '(?:^|\s)--all\b'))
+        if ($bulk) {
+            return 'pushes in bulk (--mirror, --prune or --force --all), which can rewrite many branches at once'
+        }
+
+        if ($force -or $delete) {
+            $dest = Get-PushDestination -Token $token
+            if ($dest.Named.Count -eq 0) {
+                return 'force-pushes or deletes without naming a branch, so it may hit the default branch'
+            }
+
+            if ($dest.HasDefault) {
+                return 'force-pushes or deletes the default branch (main or master)'
+            }
+        }
+    }
+
+    if ($git -and -not $Override -and $token -ccontains 'branch' -and
+        [regex]::IsMatch($Segment, '\b(?:refs/heads/)?(?:main|master)\b')) {
+        $destructive = [regex]::IsMatch($Segment, '(?:^|\s)-[A-Za-z]*[DM][A-Za-z]*\b')
+        $forceDelete = (Test-Any -Text $Segment -Pattern @('--delete', '(?:^|\s)-[a-z]*d[a-z]*\b')) -and
+            (Test-Any -Text $Segment -Pattern @('--force', '(?:^|\s)-[a-z]*f[a-z]*\b'))
+        if ($destructive -or $forceDelete) {
+            return 'force-deletes or force-renames the default branch (main or master)'
+        }
+    }
+
+    if ($gh) {
+        $flag = '(?:\s+-{1,2}[\w-]+(?:[= ][^\s-]\S*)?)*'
+        if ([regex]::IsMatch($Segment, "(?i)\bgh(?:\.exe)?$flag\s+pr$flag\s+merge\b")) {
+            return 'merges a pull request, which is a person''s decision'
+        }
+
+        if ([regex]::IsMatch($Segment, '(?i)\bapi\b')) {
+            $mutating = [regex]::IsMatch($Segment, '(?i)(?:-X|--method)\s*=?\s*["'']?(?:DELETE|PATCH|PUT|POST)\b')
+            if ($mutating -and (Test-Any -Text $Segment -Pattern @('git/refs', 'pulls/\S+/merge'))) {
+                return 'calls the GitHub API to change a ref or merge a pull request'
+            }
+
+            if ([regex]::IsMatch($Segment, '\bgraphql\b')) {
+                if (Test-Any -Text $Segment -Pattern @('mergePullRequest', 'deleteRef', 'updateRefs?\b')) {
+                    return 'sends a GraphQL mutation that merges a pull request or changes a ref'
+                }
+
+                if (Test-Any -Text $Segment -Pattern @('=@', '(?i)(?:-F|--field|-f|--raw-field)\s+\S*@')) {
+                    return 'sends a GraphQL query read from a file, so what it does cannot be seen here'
+                }
+            }
+        }
+
+        if ([regex]::IsMatch($Segment, '(?i)\bgh(?:\.exe)?\s+alias\s+set\b')) {
+            return 'defines a gh alias, which can hide the command it runs'
+        }
+    }
+
+    if ($git -and (Test-Any -Text $Segment -Pattern @('(?i)\s-c\s*["'']?alias\.', 'alias\.[\w-]+\s*='))) {
+        return 'defines a git alias inline, which can hide the command it runs'
+    }
+
+    if ([regex]::IsMatch($Segment, 'GIT_CONFIG_(?:COUNT|KEY_\d+|VALUE_\d+|PARAMETERS)\s*=')) {
+        return 'injects git configuration through GIT_CONFIG_* variables, which can change what git does'
+    }
+
+    if ([regex]::IsMatch($Segment, '(?i)(?:^|\s)eval\s')) {
+        return 'uses eval, so what runs is built at run time and cannot be seen here'
+    }
+
+    if ([regex]::IsMatch($Segment, '(?i)\bxargs\b.*\bgit\b')) {
+        return 'pipes into xargs git, so the arguments git receives cannot be seen here'
+    }
+
+    if ([regex]::IsMatch($Segment, '(?i)\b(?:invoke-expression|iex)\b')) {
+        return 'uses Invoke-Expression, so what runs is built at run time and cannot be seen here'
+    }
+
+    if ([regex]::IsMatch($Segment, '(?i)\b(?:start-process|saps)\b.{0,40}?\bgit\b')) {
+        return 'starts git through Start-Process, which hides its arguments'
+    }
+
+    # -EncodedCommand and every prefix PowerShell accepts for it; -ExecutionPolicy does not match.
+    if ([regex]::IsMatch($Segment, '(?i)\b(?:pwsh|powershell)(?:\.exe)?\b.*?\s-e(?:c|n[a-z]*)?\b')) {
+        return 'runs an encoded PowerShell command, which hides the script'
+    }
+}
+
+function Get-AskReason {
+    <#
+    .SYNOPSIS
+        Returns why a command needs a person's approval, or nothing.
     .PARAMETER Text
         The command, with line continuations already joined.
     .PARAMETER Override
-        Allow force-pushes and branch deletions to any branch (gh pr merge and
-        the api merge forms are still denied).
+        Lets force-pushes and branch deletions to any branch pass.
     .OUTPUTS
-        System.String. The reason, or nothing.
+        System.String. The reason, phrased to follow "this command", or
+        nothing.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -179,129 +294,19 @@ function Get-DenyReason {
         [switch]$Override
     )
 
-    $runItYourself = 'run it yourself if you mean to, so a person can see it'
-
-    # A push-like verb (push or send-pack, however the tool name is obscured).
-    if (Test-Any -Text $Text -Pattern @('\bpush\b', '\bsend-pack\b')) {
-        $force = Test-Any -Text $Text -Pattern @(
-            '--force',                      # --force, --force-with-lease[=val], --force-if-includes, --force-w/-i
-            '(?:^|\s)-[a-z]*f[a-z]*\b',     # a short-flag cluster carrying f
-            '(?:^|\s)\+[\w./:-]+'           # a +refspec force
-        )
-        $delete = Test-Any -Text $Text -Pattern @(
-            '--del[a-z]*',                  # --delete and every abbreviation down to --del
-            '(?:^|\s)-[a-z]*d[a-z]*\b',     # a short-flag cluster carrying d
-            '(?:^|\s):[\w./-]+'             # a :branch delete refspec
-        )
-        $bulk = Test-Any -Text $Text -Pattern @('--mirror', '--prune\w*')
-        $all = $force -and (Test-Any -Text $Text -Pattern @('(?:^|\s)--all\b'))
-        if (($force -or $delete -or $bulk -or $all) -and -not $Override) {
-            if ($bulk -or $all) {
-                return 'this pushes in bulk (--mirror/--prune/--all) and can rewrite many branches; ' +
-                    'push the one branch you mean'
-            }
-
-            $dest = Get-PushDestination -Text $Text
-            if ($dest.Named.Count -eq 0) {
-                return 'name the branch, e.g. `git push --force-with-lease origin <branch>`; ' +
-                    'force-pushing the default branch is not allowed'
-            }
-
-            if ($dest.HasDefault) {
-                return 'force-pushing or deleting the default branch (main or master) is not allowed; ' +
-                    'push to a feature branch instead'
-            }
-        }
+    # The only rule that spans a pipe: decoding base64 straight into a shell.
+    if ([regex]::IsMatch($Text, '(?i)\bbase64\s+(?:-d|-D|--decode)\b[^\r\n;]*\|\s*(?:sudo\s+)?(?:ba|z|da)?sh\b')) {
+        return 'decodes base64 into a shell, which hides the script'
     }
 
-    # git branch that force-deletes or force-renames main or master. Judged
-    # within one command segment: a PowerShell -Depth or -Module elsewhere in
-    # a script, plus the words in a string, must not count.
-    if (-not $Override) {
-        foreach ($segment in [regex]::Split($Text, '&&|\|\||[;&|\r\n(){}]')) {
-            if (-not [regex]::IsMatch($segment, '\bbranch\b') -or
-                -not (Test-Any -Text $segment -Pattern @('\b(?:refs/heads/)?(?:main|master)\b'))) {
-                continue
-            }
-
-            $branchDestructive = Test-Any -Text $segment -Pattern @('(?:^|\s)-[A-Za-z]*[DM][A-Za-z]*\b')
-            $branchForceCombo = (Test-Any -Text $segment -Pattern @('--delete', '(?:^|\s)-[a-z]*d[a-z]*\b')) -and
-                (Test-Any -Text $segment -Pattern @('--force', '(?:^|\s)-[a-z]*f[a-z]*\b'))
-            if ($branchDestructive -or $branchForceCombo) {
-                return 'force-deleting or force-renaming the default branch (main or master) is not allowed'
-            }
-        }
-    }
-
-    # gh pr merge, in either word order, with or without -R repo flags.
-    $ghPresent = [regex]::IsMatch($Text, '(?i)\bgh\b')
-    if ($ghPresent -and
-        [regex]::IsMatch($Text, '\bpr\b') -and
-        [regex]::IsMatch($Text, '\bmerge\b')) {
-        return 'merging a pull request is a person''s decision; merge it yourself'
-    }
-
-    if ($ghPresent -and [regex]::IsMatch($Text, '\bapi\b')) {
-        $mutating = Test-Any -Text $Text -Pattern @(
-            '(?i)(?:-X|--method)\s+["'']?(?:DELETE|PATCH|PUT|POST)',
-            '(?i)(?:-X|--method)["'']?=["'']?(?:DELETE|PATCH|PUT|POST)'
-        )
-        $refOrMerge = Test-Any -Text $Text -Pattern @('git/refs', 'pulls/\S+/merge')
-        if ($mutating -and $refOrMerge) {
-            return "this gh api call mutates a ref or merges a pull request; $runItYourself"
+    foreach ($segment in [regex]::Split($Text, '&&|\|\||[;&|\r\n]')) {
+        if ([string]::IsNullOrWhiteSpace($segment)) {
+            continue
         }
 
-        if ([regex]::IsMatch($Text, '\bgraphql\b') -and
-            (Test-Any -Text $Text -Pattern @('mergePullRequest', '=@', '(?i)(?:-F|--field|-f|--raw-field)\s+\S*@'))) {
-            return "this gh api graphql call can mutate (a mutation name or a query from a file); $runItYourself"
-        }
-    }
-
-    if ($ghPresent -and [regex]::IsMatch($Text, '\balias\b') -and [regex]::IsMatch($Text, '\bset\b')) {
-        return 'gh alias set can hide a command behind an alias; set it yourself'
-    }
-
-    # Obfuscation and indirection: run the real command in the open instead.
-    $openUp = 'run the command directly, in the open, so a person can see what it does'
-    if (Test-Any -Text $Text -Pattern @('(?i)\bgit\b[\s\S]{0,40}?-c\s*["'']?alias\.', 'alias\.[\w-]+\s*=')) {
-        return "this hides a command inside a git alias; $openUp"
-    }
-
-    if ([regex]::IsMatch($Text, 'GIT_CONFIG_[A-Z0-9_]*\s*=')) {
-        return "a GIT_CONFIG_* assignment can rewrite what a git command does; $openUp"
-    }
-
-    if (Test-Any -Text $Text -Pattern @('(?i)\beval\b')) {
-        return "eval hides what runs; $openUp"
-    }
-
-    if (Test-Any -Text $Text -Pattern @('(?i)\bxargs\b[\s\S]*\bgit\b', '(?i)\bgit\b[\s\S]*\|\s*xargs')) {
-        return "piping into xargs git hides the real command; $openUp"
-    }
-
-    if (Test-Any -Text $Text -Pattern @('(?i)\b(?:invoke-expression|iex)\b')) {
-        return "Invoke-Expression hides what runs; $openUp"
-    }
-
-    if (Test-Any -Text $Text -Pattern @('(?i)\b(?:start-process|saps)\b[\s\S]{0,40}?git')) {
-        return "launching git through Start-Process hides its arguments; $openUp"
-    }
-
-    # pwsh/powershell -EncodedCommand (and its -e/-ec/-enc short forms) hides the script in base64.
-    # The flag must follow the shell name in the same segment: a bare `set -e` elsewhere is not it.
-    $encodedShell = '(?i)\b(?:pwsh|powershell)(?:\.exe)?\b[^;&|\r\n]*\s-e(?:c|nc|ncodedcommand)?\b'
-    if (Test-Any -Text $Text -Pattern @($encodedShell)) {
-        return "an encoded PowerShell command hides what runs; pass the script as plain text instead"
-    }
-
-    # A long base64-looking blob next to a git or gh command, e.g. a smuggled script.
-    if (Test-Any -Text $Text -Pattern @('(?i)\bgit\b', '(?i)\bgh\b')) {
-        foreach ($blob in [regex]::Matches($Text, '[A-Za-z0-9+/]{40,}={0,2}')) {
-            $value = $blob.Value
-            $looksBase64 = $value -match '[+/=]' -or ($value -cmatch '[A-Z]' -and $value -cmatch '[a-z]')
-            if ($looksBase64) {
-                return "this carries an encoded blob beside a git or gh command; $openUp"
-            }
+        $reason = Get-SegmentReason -Segment $segment -Override:$Override
+        if ($reason) {
+            return $reason
         }
     }
 }
@@ -349,6 +354,22 @@ function Get-HookCommand {
     }
 }
 
+function Write-AskDecision {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Reason
+    )
+
+    $reasonJson = [System.Text.Json.JsonSerializer]::Serialize("ai-harness: this command $Reason.", [string])
+    $fields = @(
+        '"hookEventName":"PreToolUse"'
+        '"permissionDecision":"ask"'
+        '"permissionDecisionReason":' + $reasonJson
+    )
+    [Console]::Out.WriteLine('{"hookSpecificOutput":{' + ($fields -join ',') + '}}')
+}
+
 try {
     $command = Get-HookCommand -Json ([Console]::In.ReadToEnd())
     if ($null -eq $command) {
@@ -365,23 +386,15 @@ try {
         [Console]::Error.WriteLine('Block-DangerousGit: history-rewrite override is active for this session')
     }
 
-    $reason = Get-DenyReason -Text $joined -Override:$override
-    if (-not $reason) {
-        exit 0
+    $reason = Get-AskReason -Text $joined -Override:$override
+    if ($reason) {
+        Write-AskDecision -Reason $reason
     }
 
-    $reasonJson = [System.Text.Json.JsonSerializer]::Serialize("Blocked by ai-harness: $reason.", [string])
-    $fields = @(
-        '"hookEventName":"PreToolUse"'
-        '"permissionDecision":"deny"'
-        '"permissionDecisionReason":' + $reasonJson
-    )
-    [Console]::Out.WriteLine('{"hookSpecificOutput":{' + ($fields -join ',') + '}}')
     exit 0
 }
 catch {
-    # Fail closed: block the call rather than let an unchecked command through.
-    $message = "Block-DangerousGit blocked the command (it could not be checked): $($_.Exception.Message)"
-    [Console]::Error.WriteLine($message)
-    exit 2
+    # Neither block nor wave through a command that could not be checked: ask.
+    Write-AskDecision -Reason "could not be checked by the hook ($($_.Exception.Message)); read it before approving"
+    exit 0
 }

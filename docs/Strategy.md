@@ -163,8 +163,8 @@ A model that has read a rule will usually follow it;
 a rule that must hold *every* time needs a mechanism:
 
 - **Personal guardrails** are hooks installed from here:
-  scripts that refuse a force-push, a self-merge, the deletion of a
-  default branch.
+  scripts that ask before a force-push or the deletion of a default
+  branch, or a self-merge, so a person decides each one.
   They run locally and send nothing anywhere.
 - **Project guarantees** are the project's rulesets and its own hooks.
 - A denial in either layer beats an allowance in the other.

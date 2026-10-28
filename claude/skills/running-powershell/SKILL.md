@@ -4,9 +4,9 @@ description: >-
   How to run commands through the PowerShell and Bash tools without lost
   quoting, leaked environment, wrong line endings or BOMs, runs that hang or
   end unnoticed, a real tool or dialog opening, or a command the guard hook
-  denies. Use before running any command, script or test run, after writing a
-  file with the Write tool, and when a command did nothing, was denied or
-  behaved unexpectedly.
+  asks about. Use before running any command, script or test run, after
+  writing a file with the Write tool, and when a command did nothing, was
+  denied or behaved unexpectedly.
 when_to_use: >-
   Trigger phrases: run in the background, command timed out, hung, pwsh -File,
   Start-Process, set an environment variable, output too long, line endings,
@@ -53,29 +53,28 @@ Do not call `python3` in Git Bash: it can be a Store stub that does nothing.
 
 ## The command guard
 
-My PreToolUse hook reads the text of every Bash and PowerShell command, without
-parsing it, and denies:
+My PreToolUse hook reads the text of every Bash and PowerShell command. It
+never blocks one: it asks me, with its reason in the permission prompt,
+before
 
 - a force-push, a branch deletion or a bulk push (`--mirror`, `--prune`,
   `--force --all`) aimed at the default branch or at no named branch, and
   force-deleting or force-renaming the default branch;
 - `gh pr merge`, and a `gh api` call that merges a pull request or changes a
   ref;
-- anything that hides what runs: an encoded PowerShell invocation,
-  `Invoke-Expression`, `eval`, piping into `xargs git`, a git or gh alias, a
-  `GIT_CONFIG_*` assignment, `Start-Process` launching git, or a long base64
-  blob beside a git or gh command.
+- anything that hides what runs: an encoded PowerShell invocation, base64
+  decoded into a shell, `Invoke-Expression`, `eval`, piping into `xargs git`,
+  a git or gh alias, a `GIT_CONFIG_COUNT`, `_KEY_n` or `_VALUE_n`
+  assignment, or `Start-Process` launching git.
 
-It matches words anywhere in the text, so it over-blocks on purpose. A commit
-message or pull request body that merely mentions such a command is denied as
-if it ran it, and so is any command where `pwsh` or `powershell` is followed,
-in the same command, by `-e`, `-ec`, `-enc` or `-EncodedCommand` (an
-`-ExecutionPolicy` flag is fine). Prose goes in a file passed by path: write it
-with the Write tool,
-then `git commit -F <file>`, `gh pr create --body-file <file>`,
-`gh issue comment --body-file <file>`. Never inline, and never reworded to
-slip past the scan. A denial says what to do instead; when the command is
-really needed, hand it to me to run.
+It judges each command segment on its own: the text between `;`, `&&`, `||`,
+`|`, `&` and line breaks. A line of prose that reads like one of those
+commands still asks, as does a quoted pattern such as a grep for one, because
+text cannot tell it from a command handed to `bash -c`. So prose goes in a
+file passed by path: write it with the Write tool, then
+`git commit -F <file>`, `gh pr create --body-file <file>`,
+`gh issue comment --body-file <file>`. Never reword a command to slip past the
+scan. Separately, my settings deny a plain `gh pr merge` outright.
 
 ## Long-running work
 

@@ -164,12 +164,12 @@ beside itself; read the backup for anything worth promoting into
 
 ## Loosening a guardrail for one session
 
-- **History rewrite** (force-pushing or deleting `main`/`master`,
-  resetting a repository): set `AI_HARNESS_ALLOW_HISTORY_REWRITE=1` in
-  the shell, start Claude from that shell, do the work, close the
-  session. The hook reads the variable only from its own environment,
-  so nothing Claude runs can set it, and merging a pull request stays
-  denied regardless.
+- **History rewrite** (force-pushing or deleting `main`/`master`):
+  the hook asks before each one. For a session of deliberate rewriting,
+  set `AI_HARNESS_ALLOW_HISTORY_REWRITE=1` in the shell, start Claude
+  from that shell, do the work, close the session. The hook reads the
+  variable only from its own environment, so nothing Claude runs can
+  set it, and merging a pull request still asks.
 - **Silence** (a call, a recording): `"Quiet": true` in
   `local/notifications.json`. It is read on the next notification —
   no restart — and the log line is still written.
