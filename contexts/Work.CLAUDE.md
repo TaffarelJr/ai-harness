@@ -11,8 +11,12 @@ personal defaults.
 - Code, pull requests, and CI/CD live on GitHub Enterprise. Use the
   GitHub MCP server named below when it answers; when it does not,
   fall back to `gh` with the work account named below.
-- A pull request always references the work item it serves as `AB#<id>`,
-  so the two systems link.
+- A pull request references the work item it serves as `AB#<id>` on the
+  first line of its description, so the two systems link. Never in a title
+  or in a commit message.
+- On my own pull request, reply to a review thread only when the reply adds
+  something; an emoji, or nothing, is fine. Resolve a bot's thread once it
+  is dealt with, and leave a person's for them to resolve.
 - Only a person merges a pull request.
 - Nothing from these repositories — code, data, or conversation —
   leaves the machine except to the AI providers the employer has
