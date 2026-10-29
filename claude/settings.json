@@ -37,6 +37,7 @@
     "claude-sonnet-5": { "effortLevel": "xhigh" },
     "claude-sonnet-5-5": { "effortLevel": "xhigh" }
   },
+  "theme": "dark",
   "hooks": {
     "PreToolUse": [
       {
