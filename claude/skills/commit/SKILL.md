@@ -68,6 +68,8 @@ types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
 - Imperative present tense: "change", not "changed" or "changes".
 - The subject says **what** changed, fits on one line,
   and makes sense without the body.
+- No issue, story or work-item reference (`#N`, `Closes #N`, a work-item
+  id): the pull request description carries it.
 - Add a body only when a *why* needs saying: the constraint worked around,
   the approach that failed, the defect the diff does not reveal.
   A few lines wrapped at 72. A body that restates the subject is noise;

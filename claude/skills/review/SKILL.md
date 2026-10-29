@@ -21,6 +21,10 @@ Scale the review to the change. Five parallel reviewers cost roughly fifteen
 times a plain conversation: right before a pull request, absurd for a
 renamed variable.
 
+Someone else's pull request, given by URL or number, goes through
+`reviewing-pull-requests`, which fetches the diff, returns here for steps 2
+to 6, and posts the review.
+
 ## 1. Establish the diff
 
 Find the default branch

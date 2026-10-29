@@ -39,9 +39,16 @@ Verify before implementing; technical correctness over social comfort.
 6. **Fold, do not append.** Each fix goes into the commit that introduced the
    thing, then the stack is restacked and pushed (`stacked-pull-requests`).
 7. **Reply to every thread**, applicable or not, in a sentence or two:
-   what changed and where, or the technical reason nothing did.
+   what changed and where, or the technical reason nothing did. Where the
+   folder's `CLAUDE.md` says to reply only when a reply adds something,
+   skip the rest; an emoji is fine when the commit already says it.
 8. **Resolve** the thread once the point is dealt with or answered.
+   Where the folder's `CLAUDE.md` says to resolve only a bot's threads,
+   leave a person's for them: it is their signal to look again.
    A thread with an open question stays open until it is answered.
+
+Never post a comment announcing that the feedback was addressed, and never
+put one in a review body: the thread replies and the commits already say it.
 
 Handle a stack bottom up: a fold in a lower pull request rewrites every one
 above it.
@@ -51,7 +58,9 @@ is worth it.
 
 ## How to reply
 
-State the fix or the reasoning, and stop.
+State the fix or the reasoning, and stop: one or two sentences.
+More than that is narrating the investigation, which the reader does not
+need, however much of it there was.
 
 - It applied: "Fixed: the guard now rejects an empty name (`src/parse.py:41`)."
 - It did not: "The only caller (`build.py:88`) already trims, so this cannot

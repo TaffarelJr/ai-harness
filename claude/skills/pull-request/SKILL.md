@@ -46,19 +46,35 @@ filling in its actual sections. Otherwise:
 
 - **Why**, in a sentence or two: the problem, not the diff.
 - **What changed**, as bullets grouped by concern, mirroring the commits.
-- **How it was verified**: the commands run and what they reported.
-  "Tests pass" is not verification; the output is.
+- **How it was verified**: one line naming what ran and what it reported.
+  "Tests pass" is not verification; the result is.
 - **What is left out**, and why. Reviewers need this most and get it least.
 
-Keep it readable in a minute: a line per bullet, a sentence or two per
-section. A description longer than its change is a sign to cut.
+Keep it readable in half a minute: a line per bullet, a sentence or two per
+section, and no section that has nothing to say. A description longer than
+its change is a sign to cut.
+Write each bullet first as a bare statement of what changed; add a reason
+only where it is load-bearing, and then in a few words. A reason on every
+bullet is the most common way a description becomes a wall of text.
 
-Reference the tracker the folder's `CLAUDE.md` names:
+The description holds the work in this pull request and nothing else:
 
-- A GitHub issue: `Closes #N` only when merging completes the issue,
-  otherwise `Refs #N`.
-- Work items in Azure DevOps: `AB#<id>`, which links the pull request to
-  the item.
+- No checklist of steps that happen elsewhere or later — a rollout plan,
+  another repository's change, a manual setting, a release. The pull
+  request is merged and closed before any of it could be ticked. Give
+  those to the owner in the conversation. A requirement of the code itself
+  is one plain sentence.
+- No warning about something a repository setting already enforces.
+- Nothing a bot already said on the pull request, and no status that
+  belongs in a comment.
+
+Say what the pull request settles, in the description. The folder's
+`CLAUDE.md` names the tracker and the form a reference takes there.
+
+- A GitHub issue, or a pull request this one makes redundant: `Resolves #N`,
+  one line each, when merging completes it; otherwise `Refs #N`.
+  Merging closes the other pull request too, so do not close it by hand;
+  a closing keyword acts only when this one targets the default branch.
 
 End with the attribution line the session specifies. Write the body to a
 file outside the repository; Markdown backticks stay unescaped.
@@ -70,18 +86,26 @@ git push -u origin <branch>
 gh pr create --draft --base <base> --title '<title>' --body-file <file>
 ```
 
-The title is a Conventional Commit subject: the commit's own when there is
-one, a summary of the concern when there are several.
+The title is a short, plain description of the overall change: never a
+Conventional Commit, and no tracker reference. The commits carry the type;
+the description carries the reference.
 Report the URL.
-
-To change the description later, edit the file and send it whole:
-`gh api -X PATCH repos/{owner}/{repo}/pulls/<number> -F body=@<file>`.
 
 Never merge it, mark it ready, enable auto-merge, approve it,
 or request a reviewer — a person or a review bot — unless asked.
 A person marks it ready and merges it.
 
-## 5. Say what will be checked
+## 5. Keep the description current
+
+Every push that changes what the pull request does changes its
+description in the same step.
+
+A description is shared: the owner edits it too. Read the current one
+before replacing it (`gh pr view <number> --json body --jq .body`) and keep
+whatever they removed removed. Then edit the file and send it whole:
+`gh api -X PATCH repos/{owner}/{repo}/pulls/<number> -F body=@<file>`.
+
+## 6. Say what will be checked
 
 `gh pr checks <number> --required` lists the required checks by the names
 the repository declares; do not name them from memory. If one is already

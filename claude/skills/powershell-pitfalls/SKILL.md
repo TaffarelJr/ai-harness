@@ -56,6 +56,11 @@ Each entry says what goes wrong and what to do. Formatting rules are in
   keys with different casing"), because it builds a case-insensitive object;
   `~/.claude.json` holds both `c:/x` and `C:/x` project paths. Pass
   `-AsHashtable`, whose keys are case-sensitive, and index with the exact key.
+- **An integer key on an `[ordered]` dictionary is a position.**
+  `$map[2]` returns the third entry, and a number past the end is `$null`,
+  even when the keys are `1`, `2`, `3`. A script that pairs numbered keys
+  with values quietly pairs them with the wrong ones. Use string keys
+  (`'a'`), an array of hashtables, or `$map.Item([object]2)`.
 - **A `string[]` interpolated into a string** joins on `$OFS` (one space), so a
   captured multi-line output collapses to one line. Join with
   `-join [Environment]::NewLine` first.
@@ -143,6 +148,12 @@ Each entry says what goes wrong and what to do. Formatting rules are in
 
 ## Modules and scope
 
+- **A script block runs in the scope that calls it**, and variable names
+  ignore case. Handed to a helper with a `$Step` parameter, the block
+  `{ git add -- $step.Files }` sees the parameter's string, `.Files` is
+  `$null`, and `git add --` with no path prints a hint and exits 0. Give
+  helper parameters names no caller's block uses, or pass the values in as
+  arguments.
 - **A call into another module resolves through the global scope**, so a
   later-loaded command with the same name wins. Import each dependency into the
   module's own scope (`Import-Module -ModuleInfo`, not `-Global`); a qualified
