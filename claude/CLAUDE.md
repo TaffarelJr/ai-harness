@@ -72,11 +72,14 @@ are more specific than anything here.
 - Never rewrite or force-push the default branch, or a branch someone else
   builds on. My own branch under an open pull request is rewritten freely.
   Never merge a pull request yourself.
-- Conventional Commits; one concern per commit.
+- Conventional Commits, one concern per commit, each saying what it changes.
+  Issue and story references go in the pull request description; its title
+  is plain, never a Conventional Commit.
 - Keep the tracking issue current as work progresses —
   tick items, add summaries — without being asked.
 - Reply to every review thread, concisely, and resolve it
   once that is appropriate.
+- Keep everything posted on a pull request short.
 - More than one `gh` account may be signed in on a machine, and the
   active one can change between two of my commands. The folder's own
   `CLAUDE.md` says which account its repositories use. Before any `gh`
