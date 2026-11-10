@@ -18,6 +18,9 @@ personal defaults.
   people don't read walls of text. Say what is needed and the reason
   in a sentence or two. Leave out how I got there, the options I ruled
   out, and evidence such as exact error messages.
+- A story for another team carries none of my team's context:
+  no release dates, sprints, or internal plans. It states what we need
+  from them and a short reason, and nothing else.
 - A pull request references the work item it serves as `AB#<id>` on the
   first line of its description, so the two systems link. Never in a title
   or in a commit message.
