@@ -11,6 +11,16 @@ personal defaults.
 - Code, pull requests, and CI/CD live on GitHub Enterprise. Use the
   GitHub MCP server named below when it answers; when it does not,
   fall back to `gh` with the work account named below.
+- The repository defines what each story status means. For me,
+  a story pulled into a sprint and assigned to me goes to `Developing`:
+  I work every story in parallel. That holds until I say otherwise.
+- Keep a story's description and acceptance criteria short:
+  people don't read walls of text. Say what is needed and the reason
+  in a sentence or two. Leave out how I got there, the options I ruled
+  out, and evidence such as exact error messages.
+- A story for another team carries none of my team's context:
+  no release dates, sprints, or internal plans. It states what we need
+  from them and a short reason, and nothing else.
 - A pull request references the work item it serves as `AB#<id>` on the
   first line of its description, so the two systems link. Never in a title
   or in a commit message.
