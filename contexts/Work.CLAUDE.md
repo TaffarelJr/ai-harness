@@ -14,6 +14,10 @@ personal defaults.
 - The repository defines what each story status means. For me,
   a story pulled into a sprint and assigned to me goes to `Developing`:
   I work every story in parallel. That holds until I say otherwise.
+- Keep a story's description and acceptance criteria short:
+  people don't read walls of text. Say what is needed and the reason
+  in a sentence or two. Leave out how I got there, the options I ruled
+  out, and evidence such as exact error messages.
 - A pull request references the work item it serves as `AB#<id>` on the
   first line of its description, so the two systems link. Never in a title
   or in a commit message.
