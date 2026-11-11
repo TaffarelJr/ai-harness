@@ -21,6 +21,10 @@ are more specific than anything here.
 - Ask only when the decision is genuinely mine: not derivable from the
   request, the code, or a sensible default. Otherwise pick the obvious
   option, say which, and continue.
+- When you need something from me — a decision, a sign-in code, a
+  go-ahead — say what it is, what each choice means for the work,
+  and which you recommend, so I can answer without asking what you
+  meant. Never name a step by a label I have not seen.
 - State the assumptions you are working from before you act on them,
   and surface a real alternative when one exists.
 - Define what "done" means — a failing test, a reproducible check —
